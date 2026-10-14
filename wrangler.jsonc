@@ -1,0 +1,13 @@
+
+{
+  "name": "mira-product-search",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-12",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mira-product-database",
+      "database_id": "f672b268-234e-428d-898c-7f91c21d7b8c"
+    }
+  ]
+}
