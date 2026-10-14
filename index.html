@@ -126,13 +126,16 @@ footer{background:#f8fbfb}
   <div class="sectionhead"><h2 id="resultsTitle">Search results</h2><span class="muted" id="resultCount">Enter a product number to begin</span></div>
   <div class="results" id="results" aria-live="polite"></div>
  </section>
- <p class="small" style="margin-top:20px">This is an independent prototype, not an official Mira website. This version searches a small built-in catalogue, not the entire Mira range. Always confirm compatibility against official documentation.</p>
+ <p class="small" style="margin-top:20px">This is an independent prototype, not an official Mira website. This version searches a curated starter catalogue, not the entire Mira range. Always confirm compatibility against official documentation.</p>
 </main>
 <footer><div class="wrap">Mira Product Finder · Technical identification only</div></footer>
 <script>
 // Curated starter catalogue. Verified product identification and direct manufacturer PDF; no live product feed.
 const productRecords = [
- {name:"Mira Platinum Dual Outlet Rear Fed Digital Shower",part:"1.1981.005",models:"Mira Platinum Dual",desc:"Mira Platinum Dual Rear Fed (Low Pressure), pumped digital shower. Confirm the configuration against the linked Mira guide.",status:"Not checked against current manufacturer catalogue",replacement:"Not confirmed",docs:"Official Mira installation and user guide available below",manualUrl:"https://techcomm.kohler.com/techcomm/pdf/1514415-W2-C%20Mira%20Platinum%20Installation%20Guide.pdf",spares:[["1656.131","Wall plate assembly"],["1656.132","Wall arm concealing shroud"],["1688.187","360 rail end"],["1688.190","360 Classic component pack"],["1799.009","Horizontal wall arm"],["1844.022","1.25m smooth shower hose"],["GP1489852W","Platinum UI cable"],["GP1489853W","Platinum UI dual controller"]],terms:"platinum dual digital shower rear fed",kind:"Product reference",verified:true}
+ {name:"Mira Platinum Dual Outlet Rear Fed Digital Shower",part:"1.1981.005",models:"Mira Platinum Dual",desc:"Mira Platinum Dual Rear Fed (Low Pressure), pumped digital shower. Confirm the configuration against the linked Mira guide.",status:"Not checked against current manufacturer catalogue",replacement:"Not confirmed",docs:"Official Mira installation and user guide available below",manualUrl:"https://techcomm.kohler.com/techcomm/pdf/1514415-W2-C%20Mira%20Platinum%20Installation%20Guide.pdf",spares:[["1656.131","Wall plate assembly"],["1656.132","Wall arm concealing shroud"],["1688.187","360 rail end"],["1688.190","360 Classic component pack"],["1799.009","Horizontal wall arm"],["1844.022","1.25m smooth shower hose"],["GP1489852W","Platinum UI cable"],["GP1489853W","Platinum UI dual controller"]],terms:"platinum dual digital shower rear fed",kind:"Product reference",verified:true},
+ {name:"Mira Sport Max 10.8 kW (J95D)",part:"J95D",models:"Sport Max 10.8 kW, older generation",desc:"Older Sport Max 10.8 kW electric shower. Check the model code and generation before selecting parts.",status:"Historical model; current availability not verified",replacement:"Not confirmed",docs:"Historical Mira spare-parts guide with exploded diagram",manualUrl:"https://www.plumbingforless.co.uk/files/ww/merlin/MIRA%20-%20Guide%20To%20Spare%20Parts%202013.pdf",docLabel:"Open historical Mira parts guide and diagram (PDF)",spares:[["1563.505","Heater tank, 10.8 kW"],["1563.508","Flow valve assembly, 10.8 kW"],["1563.510","PCB assembly"],["1563.512","Cover assembly"],["1563.516","Outlet connector"],["1563.519","Terminal block assembly"],["406.27","Inlet filter"]],terms:"sport max 2006 2012 1563.505 1563.508 1563.510 1563.512 1563.516 1563.519 406.27",kind:"Model code",verified:true},
+ {name:"Mira Sport Max with Airboost 9.0 kW",part:"1.1746.007",models:"Sport Max with Airboost, J03G",desc:"Sport Max with Airboost 9.0 kW. Parts differ from the 10.8 kW version and older Sport Max models.",status:"Current availability not verified",replacement:"Not confirmed",docs:"Mira exploded spare-parts diagram",manualUrl:"https://www.sparesbase.co.uk/link/1/b042712_33364_t.pdf",docLabel:"Open Mira Airboost parts diagram (PDF)",spares:[["1746.519","Heater tank, 9.0 kW"],["1746.521","Flow valve, 9.0 kW"],["1746.528","Relay PCB"],["1746.529","Air pump"],["1746.434","Inlet connector"],["406.27","Inlet filter"]],terms:"sport max airboost j03g 9.0 1746.519 1746.521 1746.528 1746.529 1746.434",kind:"Product reference",verified:true},
+ {name:"Mira Sport Max with Airboost 10.8 kW",part:"1.1746.008",models:"Sport Max with Airboost, J03H",desc:"Sport Max with Airboost 10.8 kW. Confirm model and rating before selecting components.",status:"Current availability not verified",replacement:"Not confirmed",docs:"Mira exploded spare-parts diagram",manualUrl:"https://www.sparesbase.co.uk/link/1/b042712_33364_t.pdf",docLabel:"Open Mira Airboost parts diagram (PDF)",spares:[["1746.520","Heater tank, 10.8 kW"],["1746.522","Flow valve, 10.8 kW"],["1746.528","Relay PCB"],["1746.529","Air pump"],["1746.434","Inlet connector"],["406.27","Inlet filter"]],terms:"sport max airboost j03h 10.8 1746.520 1746.522 1746.528 1746.529 1746.434",kind:"Product reference",verified:true}
 ];
 const results = document.getElementById('results');
 const query = document.getElementById('query');
@@ -158,8 +161,7 @@ function render(items, q){
   const p=document.createElement('p');p.textContent='This search has finished, but the catalogue is not comprehensive. This does not mean the part or product does not exist.';
   box.append(title,p);
   const links=document.createElement('div');links.className='links';
-  links.append(makeLink('Search the web',`https://www.google.com/search?q=${encodeURIComponent('Mira shower '+q)}`));
-  links.append(makeLink('Find Mira documents',`https://www.google.com/search?q=${encodeURIComponent('site:mirashowers.co.uk '+q+' manual parts diagram')}`));
+  const hint=document.createElement('p');hint.textContent='No verified direct document link is available for this query yet.';links.append(hint);
   box.append(links);results.append(box);return;
  }
  items.forEach(item=>{
@@ -174,14 +176,14 @@ function render(items, q){
   if(item.manualUrl){
    const docs=document.createElement('section');docs.className='doc-section';
    const dh=document.createElement('h4');dh.textContent='Technical documents';
-   const dp=document.createElement('p');dp.textContent='Official manufacturer PDF covering this model. Opens directly in a new tab.';
-   const link=makeLink('📄 Open Mira installation & user guide (PDF) ↗',item.manualUrl);link.className='doc-link';
+   const dp=document.createElement('p');dp.textContent='Mira technical document, hosted by the manufacturer or a public document archive. Opens directly in a new tab.';
+   const link=makeLink('📄 '+(item.docLabel||'Open Mira installation & user guide (PDF)')+' ↗',item.manualUrl);link.className='doc-link';
    docs.append(dh,dp,link);card.append(docs);
   }
   if(item.spares?.length){
    const section=document.createElement('section');section.className='doc-section';
    const sh=document.createElement('h4');sh.textContent='Associated spares (starter list)';
-   const note=document.createElement('p');note.textContent='Part numbers listed by an independent spares specialist. Compatibility has not been independently confirmed by Mira; this is not a complete spares list.';
+   const note=document.createElement('p');note.textContent='Selected numbers from technical documentation or specialist listings. This is not a complete parts list; verify the exact model and revision before relying on compatibility.';
    const ul=document.createElement('ul');ul.className='spares-list';
    item.spares.forEach(([code,name])=>{const li=document.createElement('li');const b=document.createElement('strong');b.textContent=code;li.append(b,document.createTextNode(name));ul.append(li)});
    section.append(sh,note,ul);card.append(section);
