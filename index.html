@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#123c43">
+<title>Mira Product Finder</title>
+<style>
+:root{--ink:#10383d;--teal:#087f78;--teal-dark:#075e5a;--mint:#dff8ef;--paper:#f2f7f6;--muted:#607577;--line:#d7e5e2;--white:#fff;--gold:#a85d13;--shadow:0 18px 48px #0b34351c}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(ellipse at 85% 2%,#d9f1e9 0,transparent 28rem),var(--paper);color:#203537;font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{position:relative;overflow:hidden;background:linear-gradient(128deg,#0b3038 0%,#124c50 58%,#087b72 100%);color:white;padding:25px 20px 42px}
+header:before,header:after{content:"";position:absolute;border:1px solid #ffffff12;border-radius:50%;pointer-events:none}
+header:before{width:420px;height:420px;right:-150px;top:-270px;box-shadow:0 0 0 38px #ffffff08,0 0 0 78px #ffffff06}
+header:after{width:180px;height:180px;right:8%;bottom:-135px;background:#4ad4b01a}
+.wrap{max-width:980px;margin:auto;position:relative;z-index:1}
+.brand{display:flex;gap:12px;align-items:center;font-weight:800;font-size:1.12rem;letter-spacing:-.02em;margin-bottom:22px}
+.drop{width:44px;height:44px;border-radius:15px;background:linear-gradient(145deg,#4be0b9,#a5f4dc);display:grid;place-items:center;color:#103f42;font-size:25px;box-shadow:0 7px 20px #031f202e}
+h1{font-size:clamp(1.8rem,5vw,2.8rem);line-height:1.1;margin:27px 0 10px;letter-spacing:-.04em}
+.intro{color:#d0e4e1;max-width:650px;margin:0 0 22px}
+.searchpanel{position:relative;background:white;color:#203537;padding:16px;border-radius:22px;box-shadow:0 22px 55px #031f2038;border:1px solid #ffffffb8}
+.searchrow{display:flex;gap:9px;align-items:center;background:#f6faf9;border:1px solid #e0ebe8;border-radius:15px;padding:5px}
+.searchrow:focus-within{border-color:#70c8b8;box-shadow:0 0 0 3px #c9f0e6}
+.searchrow input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;padding:11px 12px;color:var(--ink)}
+.searchrow input::placeholder{color:#839596}
+.btn{border:0;border-radius:12px;background:linear-gradient(135deg,#108b80,#08665f);color:white;font:700 15px system-ui;padding:12px 18px;cursor:pointer;box-shadow:0 5px 12px #0b6d6420;transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 17px #0b6d6430}
+.btn.secondary{background:#f2f8f6;color:var(--ink);border:1px solid #d5e6e1;box-shadow:none}
+.btn.secondary:hover{background:#e4f5ef;border-color:#a6d6c9}
+.btn:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid #78cfc1;outline-offset:2px}
+.hints{display:flex;gap:7px;flex-wrap:wrap;margin:13px 2px 1px}
+.pill{border:1px solid #e0ebe7;background:#fff;border-radius:999px;padding:5px 10px;font-size:.81rem;color:#587071}
+.searchtools{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid #e8efed;margin-top:15px;padding:14px 2px 1px}
+.searchtools-label{font-size:.88rem;color:var(--muted);font-weight:600}
+.searchtools-actions{display:flex;gap:8px;flex-wrap:wrap}
+.searchtools .btn{padding:9px 12px;font-size:.88rem}
+.preview{width:100%;margin-top:2px}
+main{padding:28px 20px 54px}
+.sectionhead{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:14px}
+.sectionhead h2{margin:0;font-size:1.28rem;letter-spacing:-.025em;color:var(--ink)}
+.muted{color:var(--muted);font-size:.92rem}
+.uploadbox{background:white;border:1.5px dashed #9bb9b2;border-radius:16px;padding:17px;display:flex;gap:15px;align-items:center;flex-wrap:wrap;margin-bottom:24px}
+.uploadicon{width:46px;height:46px;background:var(--mint);color:var(--teal);display:grid;place-items:center;border-radius:13px;font-size:23px}
+.uploadcopy{flex:1;min-width:180px}.uploadcopy strong{display:block}.uploadcopy span{font-size:.88rem;color:var(--muted)}.upload-actions{display:flex;gap:8px;flex-wrap:wrap}.fileinput{display:none}
+.preview{display:none;margin-top:12px;align-items:center;gap:12px;background:#f4faf8;border:1px solid #dcebe6;padding:10px;border-radius:14px}.preview.show{display:flex}.preview img{width:88px;height:88px;object-fit:contain;border-radius:10px;background:#fff;border:1px solid var(--line)}.preview p{margin:0;font-size:.9rem;color:var(--ink);overflow-wrap:anywhere}
+.results{display:grid;gap:13px}.result{background:white;border:1px solid #dce8e5;border-radius:18px;padding:19px;box-shadow:0 5px 18px #153c3c08;transition:transform .18s ease,box-shadow .18s ease}.result:hover{transform:translateY(-2px);box-shadow:0 12px 27px #153c3c10}.resulttop{display:flex;justify-content:space-between;gap:10px;align-items:start}.result h3{margin:0 0 4px;font-size:1.08rem;letter-spacing:-.015em;color:var(--ink)}.result p{margin:6px 0}.tag{font-size:.72rem;font-weight:800;letter-spacing:.055em;border-radius:999px;background:#e8f4ef;color:#17614d;padding:6px 9px;white-space:nowrap}.tag.example{background:#fff3df;color:#85501a}.details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.detail{background:linear-gradient(135deg,#f7faf9,#f1f7f5);border:1px solid #edf2f0;border-radius:12px;padding:11px}.detail b{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.link{display:inline-block;color:#155d59;font-weight:700;text-decoration:none;border:1px solid #b9d9d0;border-radius:10px;padding:8px 11px;font-size:.86rem;background:#fbfefd;transition:background .15s ease,border-color .15s ease}.link:hover{background:#e9f8f2;border-color:#7dc5b5}.empty{background:white;border:1px solid var(--line);border-radius:17px;padding:22px;box-shadow:var(--shadow)}.notice{border:1px solid #f0d7a9;border-left:4px solid #d6a35b;padding:12px 15px;background:linear-gradient(120deg,#fff9ef,#fffdf8);color:#68481f;border-radius:12px;font-size:.88rem;margin:0 0 24px}
+footer{border-top:1px solid var(--line);padding:20px;color:var(--muted);font-size:.84rem;background:#f8fbfa}.small{font-size:.84rem;color:var(--muted)}
+@media(max-width:560px){header{padding:19px 15px 30px}.brand{margin-bottom:18px}.searchpanel{padding:11px;border-radius:18px}.searchrow{flex-direction:column;align-items:stretch}.searchrow input{padding:12px 10px}.searchrow .btn{width:100%}.hints{gap:6px}.pill{font-size:.77rem}.searchtools{align-items:flex-start}.searchtools-label{width:100%}.searchtools-actions{width:100%}.searchtools-actions button{flex:1}.details{grid-template-columns:1fr}main{padding:23px 15px 40px}.sectionhead{align-items:flex-start;flex-direction:column}.result{padding:15px}.resulttop{flex-direction:column;gap:8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
+/* Refined visual direction: luminous dark header, floating search console, airy results */
+:root{--ink:#142c35;--teal:#067d76;--teal-dark:#075d5b;--paper:#f4f7f8;--muted:#61727b;--line:#e0e9eb}
+body{background:radial-gradient(ellipse at 12% 35%,#e2f3ee 0,transparent 34rem),linear-gradient(180deg,#eef4f4,#f9fbfb 65%);color:#233b43;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:radial-gradient(circle at 82% 24%,#168d81 0,transparent 33%),linear-gradient(125deg,#071e2c,#0c3c46 62%,#075c58);padding:28px 20px 65px;isolation:isolate}
+header:before{width:580px;height:580px;right:-160px;top:-380px;border:1px solid #ffffff25;box-shadow:0 0 0 65px #ffffff05,0 0 0 130px #ffffff05,0 0 0 195px #ffffff04}
+header:after{width:250px;height:250px;right:15%;bottom:-205px;filter:blur(15px);background:#5fffd01c}
+.wrap{max-width:1020px}
+.brand{font-size:1.32rem;letter-spacing:-.045em;margin-bottom:36px;gap:11px}
+.brand-light{font-weight:450;color:#c4e9e3}
+.brand-chip{font-size:.57rem;letter-spacing:.15em;border:1px solid #79c6b680;border-radius:999px;padding:4px 7px;color:#c9f9ec;margin-left:auto;font-weight:800}
+.drop{border-radius:14px;width:42px;height:42px;font-size:24px;background:linear-gradient(145deg,#b5ffe5,#50d5bb);box-shadow:0 8px 25px #011d2340}
+.searchpanel{padding:23px;border-radius:25px;box-shadow:0 28px 75px #00192158,0 2px 0 #ffffff55 inset;border:1px solid #ffffffd9;max-width:100%}
+.searchrow{background:#f6f9fa;border:1px solid #dce8e8;padding:6px;border-radius:17px;min-height:66px}
+.searchrow input{font-size:1.02rem;padding:13px 15px}
+.searchrow .btn{min-height:49px;padding:12px 22px}
+.btn{background:linear-gradient(135deg,#069b8b,#066c72);border-radius:12px;box-shadow:0 7px 17px #087e7928}
+.btn:hover{box-shadow:0 10px 22px #087e7940}
+.btn.secondary{background:white;border-color:#d9e6e5;color:#244e55}
+.hints{margin:15px 2px 4px;gap:8px}
+.pill{background:#eef7f5;border:1px solid #e0f0ec;color:#51716f;font-weight:600;padding:6px 12px}
+.searchtools{margin-top:20px;padding-top:19px;border-top:1px solid #e7eeef}
+.searchtools-label{letter-spacing:.1em;font-size:.7rem;color:#698085;font-weight:800}
+.searchtools .btn{padding:10px 15px}
+main{padding-top:33px}
+.notice{background:#fffdf7;border:1px solid #f0e7d2;border-left:3px solid #d5a75c;box-shadow:0 5px 18px #243a3c05;color:#6b5a3c}
+.sectionhead{margin-bottom:18px}
+.sectionhead h2{font-size:1.42rem;letter-spacing:-.04em}
+.results{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.result{border-radius:20px;border:1px solid #e0e9ea;box-shadow:0 12px 28px #153c3c08;padding:22px;position:relative;overflow:hidden}
+.result:before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#0d9585,#9be7d5)}
+.result h3{font-size:1.15rem}
+.detail{background:#f6f9f9;border-color:#edf2f2}
+.link{border-radius:11px;background:#f5fbf9}
+.empty{grid-column:1/-1}
+footer{background:#f8fbfb}
+@media(max-width:700px){.results{grid-template-columns:1fr}}
+@media(max-width:560px){header{padding:20px 15px 45px}.brand{margin-bottom:27px;font-size:1.15rem}.searchpanel{padding:14px;border-radius:20px}.searchrow{min-height:auto}.searchrow .btn{min-height:45px}.searchtools{margin-top:15px;padding-top:14px}.searchtools .btn{flex:1}.pill{padding:5px 9px}.result{padding:17px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="wrap">
+  <div class="brand"><div class="drop">✦</div><span>Mira <span class="brand-light">Product Finder</span></span><span class="brand-chip">BETA</span></div>
+  <div class="searchpanel">
+   <div class="searchrow">
+    <input id="query" type="search" placeholder="Try a model number, part number or description…" aria-label="Search Mira parts">
+    <button class="btn" id="searchBtn">Find product <span aria-hidden="true">↗</span></button>
+   </div>
+   <div class="hints"><span class="pill">Model number</span><span class="pill">Part number</span><span class="pill">Part description</span><span class="pill">Product name</span></div>
+   <div class="searchtools">
+    <span class="searchtools-label">SEARCH WITH A PHOTO</span>
+    <div class="searchtools-actions">
+     <button class="btn secondary" id="uploadBtn" type="button">↥ Upload image</button>
+     <button class="btn secondary" id="cameraBtn" type="button">◎ Take photo</button>
+    </div>
+    <input class="fileinput" id="imageFile" type="file" accept="image/*">
+    <input class="fileinput" id="cameraFile" type="file" accept="image/*" capture="environment">
+    <div class="preview" id="preview"><img id="previewImage" alt="Selected image preview"><p id="previewName"></p></div>
+   </div>
+  </div>
+ </div>
+</header>
+<main class="wrap">
+ <section>
+  <div class="notice"><strong>Prototype note:</strong> image upload currently previews your image only. AI image matching will be connected in a later step; this version does not claim to identify parts automatically.</div>
+ </section>
+ <section>
+  <div class="sectionhead"><h2 id="resultsTitle">Search examples</h2><span class="muted" id="resultCount">Demo records only</span></div>
+  <div class="results" id="results" aria-live="polite"></div>
+ </section>
+ <p class="small" style="margin-top:20px">This is an independent prototype, not an official Mira website. Example records are illustrative and must not be used to confirm part compatibility.</p>
+</main>
+<footer><div class="wrap">Mira Product Finder · Technical identification only</div></footer>
+<script>
+const demoRecords = [
+ {name:"Example thermostatic cartridge",part:"DEMO-PART-001",models:"Example model family A (illustrative)",desc:"Illustrative demo record for testing search by component description.",status:"Unverified demo status",replacement:"Not verified",docs:"Search official Mira documentation",terms:"thermostatic cartridge shower"},
+ {name:"Example shower handset",part:"DEMO-PART-002",models:"Example model family B (illustrative)",desc:"Illustrative demo record for testing part-number and model searches.",status:"Unverified demo status",replacement:"Not verified",docs:"Search official Mira documentation",terms:"shower handset"}
+];
+const results = document.getElementById('results');
+const query = document.getElementById('query');
+function makeLink(text,url){const a=document.createElement('a');a.className='link';a.textContent=text;a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a}
+function render(items, q){
+ results.replaceChildren();
+ document.getElementById('resultsTitle').textContent = q ? 'Search results' : 'Search examples';
+ document.getElementById('resultCount').textContent = q ? `${items.length} demo match${items.length===1?'':'es'}` : 'Demo records only';
+ if(!items.length){
+  const box=document.createElement('div');box.className='empty';
+  const title=document.createElement('strong');title.textContent='No demo record found';
+  const p=document.createElement('p');p.textContent='Try a different term, or search the web for public Mira documentation. Live web indexing is not connected yet.';
+  box.append(title,p);
+  const links=document.createElement('div');links.className='links';
+  links.append(makeLink('Search Google',`https://www.google.com/search?q=${encodeURIComponent('Mira shower spare parts '+q)}`));
+  links.append(makeLink('Search Mira documents',`https://www.google.com/search?q=${encodeURIComponent('site:mirashowers.co.uk '+q+' manual parts diagram')}`));
+  box.append(links);results.append(box);return;
+ }
+ items.forEach(item=>{
+  const card=document.createElement('article');card.className='result';
+  const top=document.createElement('div');top.className='resulttop';
+  const heading=document.createElement('div');const h=document.createElement('h3');h.textContent=item.name;const p=document.createElement('p');p.className='muted';p.textContent='Part reference: '+item.part;heading.append(h,p);
+  const tag=document.createElement('span');tag.className='tag example';tag.textContent='ILLUSTRATIVE EXAMPLE';top.append(heading,tag);card.append(top);
+  const desc=document.createElement('p');desc.textContent=item.desc;card.append(desc);
+  const details=document.createElement('div');details.className='details';
+  [['Associated models',item.models],['Product status',item.status],['Replacement reference',item.replacement],['Documents',item.docs]].forEach(([label,value])=>{const d=document.createElement('div');d.className='detail';const b=document.createElement('b');b.textContent=label;const span=document.createElement('span');span.textContent=value;d.append(b,span);details.append(d)});
+  card.append(details);
+  const links=document.createElement('div');links.className='links';links.append(makeLink('Search web for this part',`https://www.google.com/search?q=${encodeURIComponent('Mira '+item.part+' '+item.terms)}`));links.append(makeLink('Find manuals and diagrams',`https://www.google.com/search?q=${encodeURIComponent('Mira '+item.models+' manual exploded parts diagram')}`));card.append(links);results.append(card);
+ });
+}
+function search(){
+ const q=query.value.trim().toLowerCase();
+ if(!q){render(demoRecords,'');return}
+ const tokens=q.split(/\s+/);
+ const matches=demoRecords.filter(r=>tokens.every(t=>(r.name+' '+r.part+' '+r.models+' '+r.desc+' '+r.terms).toLowerCase().includes(t)));
+ render(matches,query.value.trim());
+}
+document.getElementById('searchBtn').addEventListener('click',search);
+query.addEventListener('keydown',e=>{if(e.key==='Enter')search()});
+document.getElementById('uploadBtn').addEventListener('click',()=>document.getElementById('imageFile').click());
+document.getElementById('cameraBtn').addEventListener('click',()=>document.getElementById('cameraFile').click());
+function handleFile(input){
+ const file=input.files && input.files[0]; if(!file)return;
+ if(!file.type.startsWith('image/')){alert('Please choose an image file.');return}
+ const reader=new FileReader();
+ reader.onload=()=>{document.getElementById('previewImage').src=reader.result;document.getElementById('previewName').textContent=file.name+' · Ready for future AI matching';document.getElementById('preview').classList.add('show')};
+ reader.readAsDataURL(file);
+}
+document.getElementById('imageFile').addEventListener('change',function(){handleFile(this)});
+document.getElementById('cameraFile').addEventListener('change',function(){handleFile(this)});
+render(demoRecords,'');
+</script>
+</body>
+</html>
