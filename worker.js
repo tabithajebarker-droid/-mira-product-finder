@@ -1,39 +1,56 @@
-// Mira Product Finder: starter API endpoint.
-// This confirms requests reach Cloudflare; live web search is NOT connected yet.
+
 export default {
-  async fetch(request) {
-    const url = new URL(request.url);
+  async fetch(request, env) {
     const headers = {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Access-Control-Allow-Origin': 'https://tabithajebarker-droid.github.io',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Cache-Control': 'no-store'
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "https://tabithajebarker-droid.github.io",
+      "Access-Control-Allow-Methods": "GET, OPTIONS"
     };
 
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers });
-    }
-    if (request.method !== 'GET') {
-      return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers });
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers });
     }
 
-    const query = (url.searchParams.get('q') || '').trim().slice(0, 120);
+    const url = new URL(request.url);
+    const query = (url.searchParams.get("q") || "").trim();
+
     if (!query) {
-      return new Response(JSON.stringify({
-        status: 'ready',
-        service: 'Mira Product Finder',
-        message: 'Add ?q=part-number to test a search request.'
-      }), { headers });
+      return Response.json({
+        status: "ready",
+        service: "Mira Product Finder",
+        database: "D1"
+      }, { headers });
     }
 
-    return new Response(JSON.stringify({
-      status: 'complete',
-      query,
-      results: [],
-      searchPerformed: false,
-      message: 'Request received. Live internet search is not connected yet.'
-    }), { headers });
+    try {
+      const search = `%${query.replace(/[%_\\]/g, "\\$&")}%`;
+
+      const { results } = await env.DB.prepare(`
+        SELECT id, name, model_number,
+               product_family, version,
+               status, description
+        FROM products
+        WHERE name LIKE ? ESCAPE '\\'
+           OR model_number LIKE ? ESCAPE '\\'
+           OR product_family LIKE ? ESCAPE '\\'
+        LIMIT 25
+      `).bind(search, search, search).all();
+
+      return Response.json({
+        status: "complete",
+        query,
+        results,
+        source: "Mira Product Database"
+      }, { headers });
+
+    } catch (error) {
+      return Response.json({
+        status: "error",
+        message: "Database search failed"
+      }, {
+        status: 500,
+        headers
+      });
+    }
   }
 };
-
