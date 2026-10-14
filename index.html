@@ -85,6 +85,12 @@ main{padding-top:33px}
 footer{background:#f8fbfb}
 @media(max-width:700px){.results{grid-template-columns:1fr}}
 @media(max-width:560px){header{padding:20px 15px 45px}.brand{margin-bottom:27px;font-size:1.15rem}.searchpanel{padding:14px;border-radius:20px}.searchrow{min-height:auto}.searchrow .btn{min-height:45px}.searchtools{margin-top:15px;padding-top:14px}.searchtools .btn{flex:1}.pill{padding:5px 9px}.result{padding:17px}}
+
+.search-status{display:none;align-items:center;gap:12px;margin:0 0 18px;padding:15px 17px;border-radius:14px;background:#eaf8f1;border:1px solid #a7dbc4;color:#145d48;font-weight:800;box-shadow:0 4px 16px #0c5a3a0a}
+.search-status.show{display:flex}.search-status .status-icon{font-size:1.4rem}.search-status small{display:block;color:#3e6d60;font-size:.78rem;font-weight:500;margin-top:3px}
+.search-status.searching{background:#eef5ff;border-color:#b9d5f3;color:#225b86}.search-status.searching .status-icon{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.results{grid-template-columns:1fr}
 </style>
 </head>
 <body>
@@ -115,52 +121,72 @@ footer{background:#f8fbfb}
   <div class="notice"><strong>Prototype note:</strong> image upload currently previews your image only. AI image matching will be connected in a later step; this version does not claim to identify parts automatically.</div>
  </section>
  <section>
-  <div class="sectionhead"><h2 id="resultsTitle">Search examples</h2><span class="muted" id="resultCount">Demo records only</span></div>
+  <div id="searchStatus" class="search-status" role="status" aria-live="polite"><span class="status-icon" id="statusIcon">✓</span><span><span id="statusText">Search complete</span><small id="statusDetail"></small></span></div>
+  <div class="sectionhead"><h2 id="resultsTitle">Search results</h2><span class="muted" id="resultCount">Enter a product number to begin</span></div>
   <div class="results" id="results" aria-live="polite"></div>
  </section>
- <p class="small" style="margin-top:20px">This is an independent prototype, not an official Mira website. Example records are illustrative and must not be used to confirm part compatibility.</p>
+ <p class="small" style="margin-top:20px">This is an independent prototype, not an official Mira website. This version searches a small built-in catalogue, not the entire Mira range. Always confirm compatibility against official documentation.</p>
 </main>
 <footer><div class="wrap">Mira Product Finder · Technical identification only</div></footer>
 <script>
-const demoRecords = [
- {name:"Example thermostatic cartridge",part:"DEMO-PART-001",models:"Example model family A (illustrative)",desc:"Illustrative demo record for testing search by component description.",status:"Unverified demo status",replacement:"Not verified",docs:"Search official Mira documentation",terms:"thermostatic cartridge shower"},
- {name:"Example shower handset",part:"DEMO-PART-002",models:"Example model family B (illustrative)",desc:"Illustrative demo record for testing part-number and model searches.",status:"Unverified demo status",replacement:"Not verified",docs:"Search official Mira documentation",terms:"shower handset"}
+// Starter catalogue: provisional record, not a live product feed.
+const productRecords = [
+ {name:"Mira Platinum Dual Outlet Rear Fed Digital Shower",part:"1.1981.005",models:"Mira Platinum Dual",desc:"Candidate product identification from the supplied product number. Confirm configuration against the manufacturer's documentation before use.",status:"Not yet verified",replacement:"Not yet verified",docs:"Official technical documentation to be confirmed",terms:"platinum dual digital shower rear fed",kind:"Product reference",verified:false}
 ];
 const results = document.getElementById('results');
 const query = document.getElementById('query');
+const statusBox = document.getElementById('searchStatus');
+const statusIcon = document.getElementById('statusIcon');
+const statusText = document.getElementById('statusText');
+const statusDetail = document.getElementById('statusDetail');
+let activeSearch = 0;
 function makeLink(text,url){const a=document.createElement('a');a.className='link';a.textContent=text;a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a}
+function setStatus(mode, detail){
+ statusBox.classList.add('show');statusBox.classList.toggle('searching',mode==='searching');
+ statusIcon.textContent=mode==='searching'?'◌':'✓';
+ statusText.textContent=mode==='searching'?'Searching…':'Search complete';
+ statusDetail.textContent=detail;
+}
 function render(items, q){
  results.replaceChildren();
- document.getElementById('resultsTitle').textContent = q ? 'Search results' : 'Search examples';
- document.getElementById('resultCount').textContent = q ? `${items.length} demo match${items.length===1?'':'es'}` : 'Demo records only';
+ document.getElementById('resultsTitle').textContent='Search results';
+ document.getElementById('resultCount').textContent=`${items.length} matching product${items.length===1?'':'s'}`;
  if(!items.length){
   const box=document.createElement('div');box.className='empty';
-  const title=document.createElement('strong');title.textContent='No demo record found';
-  const p=document.createElement('p');p.textContent='Try a different term, or search the web for public Mira documentation. Live web indexing is not connected yet.';
+  const title=document.createElement('strong');title.textContent='No match in the starter catalogue';
+  const p=document.createElement('p');p.textContent='This search has finished, but the catalogue is not comprehensive. This does not mean the part or product does not exist.';
   box.append(title,p);
   const links=document.createElement('div');links.className='links';
-  links.append(makeLink('Search Google',`https://www.google.com/search?q=${encodeURIComponent('Mira shower spare parts '+q)}`));
-  links.append(makeLink('Search Mira documents',`https://www.google.com/search?q=${encodeURIComponent('site:mirashowers.co.uk '+q+' manual parts diagram')}`));
+  links.append(makeLink('Search the web',`https://www.google.com/search?q=${encodeURIComponent('Mira shower '+q)}`));
+  links.append(makeLink('Find Mira documents',`https://www.google.com/search?q=${encodeURIComponent('site:mirashowers.co.uk '+q+' manual parts diagram')}`));
   box.append(links);results.append(box);return;
  }
  items.forEach(item=>{
   const card=document.createElement('article');card.className='result';
   const top=document.createElement('div');top.className='resulttop';
-  const heading=document.createElement('div');const h=document.createElement('h3');h.textContent=item.name;const p=document.createElement('p');p.className='muted';p.textContent='Part reference: '+item.part;heading.append(h,p);
-  const tag=document.createElement('span');tag.className='tag example';tag.textContent='ILLUSTRATIVE EXAMPLE';top.append(heading,tag);card.append(top);
+  const heading=document.createElement('div');const h=document.createElement('h3');h.textContent=item.name;const p=document.createElement('p');p.className='muted';p.textContent=item.kind+': '+item.part;heading.append(h,p);
+  const tag=document.createElement('span');tag.className='tag example';tag.textContent='PROVISIONAL MATCH';top.append(heading,tag);card.append(top);
   const desc=document.createElement('p');desc.textContent=item.desc;card.append(desc);
   const details=document.createElement('div');details.className='details';
-  [['Associated models',item.models],['Product status',item.status],['Replacement reference',item.replacement],['Documents',item.docs]].forEach(([label,value])=>{const d=document.createElement('div');d.className='detail';const b=document.createElement('b');b.textContent=label;const span=document.createElement('span');span.textContent=value;d.append(b,span);details.append(d)});
+  [['Product family',item.models],['Current / obsolete status',item.status],['Replacement',item.replacement],['Parts diagrams and manuals',item.docs]].forEach(([label,value])=>{const d=document.createElement('div');d.className='detail';const b=document.createElement('b');b.textContent=label;const span=document.createElement('span');span.textContent=value;d.append(b,span);details.append(d)});
   card.append(details);
-  const links=document.createElement('div');links.className='links';links.append(makeLink('Search web for this part',`https://www.google.com/search?q=${encodeURIComponent('Mira '+item.part+' '+item.terms)}`));links.append(makeLink('Find manuals and diagrams',`https://www.google.com/search?q=${encodeURIComponent('Mira '+item.models+' manual exploded parts diagram')}`));card.append(links);results.append(card);
+  const links=document.createElement('div');links.className='links';links.append(makeLink('Find official Mira information',`https://www.google.com/search?q=${encodeURIComponent('site:mirashowers.co.uk "'+item.part+'"')}`));links.append(makeLink('Search manuals and diagrams',`https://www.google.com/search?q=${encodeURIComponent('Mira "'+item.part+'" manual parts diagram')}`));card.append(links);results.append(card);
  });
 }
 function search(){
- const q=query.value.trim().toLowerCase();
- if(!q){render(demoRecords,'');return}
- const tokens=q.split(/\s+/);
- const matches=demoRecords.filter(r=>tokens.every(t=>(r.name+' '+r.part+' '+r.models+' '+r.desc+' '+r.terms).toLowerCase().includes(t)));
- render(matches,query.value.trim());
+ const q=query.value.trim();
+ const requestId=++activeSearch;
+ results.replaceChildren();document.getElementById('resultCount').textContent='';
+ if(!q){statusBox.classList.remove('show');document.getElementById('resultCount').textContent='Enter a product number to begin';return}
+ setStatus('searching','Checking the built-in product catalogue');
+ // The delay makes the start and completion states visible; no network search is performed.
+ window.setTimeout(()=>{
+  if(requestId!==activeSearch)return;
+  const tokens=q.toLowerCase().split(/\s+/);
+  const matches=productRecords.filter(r=>tokens.every(t=>(r.name+' '+r.part+' '+r.models+' '+r.terms).toLowerCase().includes(t)));
+  render(matches,q);
+  setStatus('complete',`${matches.length} match${matches.length===1?'':'es'} in the starter catalogue · No live web search performed`);
+ },500);
 }
 document.getElementById('searchBtn').addEventListener('click',search);
 query.addEventListener('keydown',e=>{if(e.key==='Enter')search()});
@@ -175,7 +201,7 @@ function handleFile(input){
 }
 document.getElementById('imageFile').addEventListener('change',function(){handleFile(this)});
 document.getElementById('cameraFile').addEventListener('change',function(){handleFile(this)});
-render(demoRecords,'');
+
 </script>
 </body>
 </html>
