@@ -126,7 +126,7 @@ footer{background:#f8fbfb}
   <div class="sectionhead"><h2 id="resultsTitle">Search results</h2><span class="muted" id="resultCount">Enter a product number to begin</span></div>
   <div class="results" id="results" aria-live="polite"></div>
  </section>
- <p class="small" style="margin-top:20px">This is an independent prototype, not an official Mira website. This version searches a curated starter catalogue, not the entire Mira range. Always confirm compatibility against official documentation.</p>
+ <p class="small" style="margin-top:20px">This is an independent prototype, not an official Mira website. This version displays matches from a curated starter catalogue and contacts a Cloudflare search service. Live internet searching is not yet enabled. Always confirm compatibility against official documentation.</p>
 </main>
 <footer><div class="wrap">Mira Product Finder · Technical identification only</div></footer>
 <script>
@@ -194,25 +194,36 @@ function render(items, q){
   results.append(card);
  });
 }
-function search(){
+const WORKER_URL='https://mira-product-search.tabithajebarker.workers.dev/';
+async function search(){
  const q=query.value.trim();
  const requestId=++activeSearch;
  results.replaceChildren();document.getElementById('resultCount').textContent='';
  if(!q){statusBox.classList.remove('show');document.getElementById('resultCount').textContent='Enter a product number to begin';return}
- setStatus('searching','Checking the built-in product catalogue');
- // The delay makes the start and completion states visible; no network search is performed.
- window.setTimeout(()=>{
-  if(requestId!==activeSearch)return;
-  const tokens=q.toLowerCase().split(/\s+/);
-  const normalise=x=>x.toLowerCase().replace(/[^a-z0-9]/g,'');
-  const matches=productRecords.filter(r=>{
-   const searchable=[r.name,r.part,r.models,r.terms,...(r.spares||[]).flat()].join(' ').toLowerCase();
-   const codes=[r.part,...(r.spares||[]).map(x=>x[0])].map(normalise);
-   return tokens.every(t=>searchable.includes(t)||codes.some(code=>code===normalise(t)||code===normalise(t).replace(/^4(?=\d{7}$)/,'')));
-  });
-  render(matches,q);
-  setStatus('complete',`${matches.length} match${matches.length===1?'':'es'} in the starter catalogue · No live web search performed`);
- },500);
+ setStatus('searching','Checking the starter catalogue and contacting the search service');
+ const tokens=q.toLowerCase().split(/\s+/);
+ const normalise=x=>x.toLowerCase().replace(/[^a-z0-9]/g,'');
+ const matches=productRecords.filter(r=>{
+  const searchable=[r.name,r.part,r.models,r.terms,...(r.spares||[]).flat()].join(' ').toLowerCase();
+  const codes=[r.part,...(r.spares||[]).map(x=>x[0])].map(normalise);
+  return tokens.every(t=>searchable.includes(t)||codes.some(code=>code===normalise(t)||code===normalise(t).replace(/^4(?=\d{7}$)/,'')));
+ });
+ let backendMessage='';
+ try {
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),8000);
+  let response;
+  try {response=await fetch(WORKER_URL+'?q='+encodeURIComponent(q),{signal:controller.signal});}
+  finally {clearTimeout(timeout);}
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  const data=await response.json();
+  if(data.status==='complete' && data.query===q){
+   backendMessage='Cloudflare search service connected (live internet search not enabled yet)';
+  } else {backendMessage='Search service returned an unexpected response';}
+ } catch(e){backendMessage='Search service unavailable; showing local catalogue matches';}
+ if(requestId!==activeSearch)return;
+ render(matches,q);
+ setStatus('complete',`${matches.length} catalogue match${matches.length===1?'':'es'} · ${backendMessage}`);
 }
 document.getElementById('searchBtn').addEventListener('click',search);
 query.addEventListener('keydown',e=>{if(e.key==='Enter')search()});
