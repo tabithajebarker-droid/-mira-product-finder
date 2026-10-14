@@ -126,7 +126,7 @@ footer{background:#f8fbfb}
   <div class="sectionhead"><h2 id="resultsTitle">Search results</h2><span class="muted" id="resultCount">Enter a product number to begin</span></div>
   <div class="results" id="results" aria-live="polite"></div>
  </section>
- <p class="small" style="margin-top:20px">This is an independent prototype, not an official Mira website. This version displays matches from a curated starter catalogue and contacts a Cloudflare search service. Live internet searching is not yet enabled. Always confirm compatibility against official documentation.</p>
+ <p class="small" style="margin-top:20px">This is an independent prototype, not an official Mira website. This version displays curated starter catalogue entries and records from a Cloudflare database. Live internet searching is not yet enabled. Always confirm compatibility against official documentation.</p>
 </main>
 <footer><div class="wrap">Mira Product Finder · Technical identification only</div></footer>
 <script>
@@ -160,8 +160,8 @@ function render(items, q){
  document.getElementById('resultCount').textContent=`${items.length} matching product${items.length===1?'':'s'}`;
  if(!items.length){
   const box=document.createElement('div');box.className='empty';
-  const title=document.createElement('strong');title.textContent='No match in the starter catalogue';
-  const p=document.createElement('p');p.textContent='This search has finished, but the catalogue is not comprehensive. This does not mean the part or product does not exist.';
+  const title=document.createElement('strong');title.textContent='No matching records found';
+  const p=document.createElement('p');p.textContent='This search has finished, but the catalogue and database are not comprehensive. This does not mean the part or product does not exist.';
   box.append(title,p);
   const links=document.createElement('div');links.className='links';
   const hint=document.createElement('p');hint.textContent='No verified direct document link is available for this query yet.';links.append(hint);
@@ -194,6 +194,63 @@ function render(items, q){
   results.append(card);
  });
 }
+// Display database records separately from the curated starter catalogue.
+function renderDatabase(products, spares, localMatches){
+ const existingCodes=new Set(localMatches.map(r=>String(r.part||'').toLowerCase()));
+ const seenProducts=new Set();
+ const addDetail=(container,label,value)=>{
+  const d=document.createElement('div');d.className='detail';
+  const b=document.createElement('b');b.textContent=label;
+  const v=document.createElement('span');v.textContent=value||'Not confirmed';
+  d.append(b,v);container.append(d);
+ };
+ const addCard=(name,subtitle,tagText,description,fields)=>{
+  const card=document.createElement('article');card.className='result';
+  const top=document.createElement('div');top.className='resulttop';
+  const heading=document.createElement('div');const h=document.createElement('h3');h.textContent=name;
+  const sub=document.createElement('p');sub.className='muted';sub.textContent=subtitle;
+  heading.append(h,sub);
+  const tag=document.createElement('span');tag.className='tag example';tag.textContent=tagText;
+  top.append(heading,tag);card.append(top);
+  if(description){const p=document.createElement('p');p.textContent=description;card.append(p)}
+  const details=document.createElement('div');details.className='details';
+  fields.forEach(([label,value])=>addDetail(details,label,value));card.append(details);
+  results.append(card);
+ };
+ for(const p of products){
+  if(!p||!p.name)continue;
+  const code=String(p.model_number||'').toLowerCase();
+  if(code&&existingCodes.has(code))continue;
+  const key=String(p.id||code||p.name);if(seenProducts.has(key))continue;seenProducts.add(key);
+  addCard(p.name,'Database product · '+(p.model_number||'Model not recorded'),
+   'DATABASE RECORD',p.description||'',[
+    ['Product family',p.product_family],['Model number',p.model_number],
+    ['Version',p.version],['Verification status',p.status||'Unverified']
+   ]);
+ }
+ // One card per spare, with all compatible models grouped together.
+ const spareGroups=new Map();
+ for(const s of spares){
+  if(!s||!s.part_number)continue;
+  const key=String(s.part_number);
+  if(!spareGroups.has(key))spareGroups.set(key,{spare:s,compatible:new Map()});
+  if(s.compatible_product){
+   const model=String(s.compatible_model||'');
+   spareGroups.get(key).compatible.set(model+'|'+s.compatible_product,
+    s.compatible_product+(model?' ('+model+')':''));
+  }
+ }
+ for(const {spare,compatible} of spareGroups.values()){
+  addCard(spare.name||'Spare part', 'Spare part · '+spare.part_number,
+   'COMPATIBILITY UNVERIFIED',spare.description||'',[
+    ['Part number',spare.part_number],
+    ['Linked shower models',compatible.size?[...compatible.values()].join('; '):'No linked models recorded'],
+    ['Part status',spare.status||'Unverified'],
+    ['Replacement part',spare.replacement_part_number||'Not confirmed']
+   ]);
+ }
+ return seenProducts.size+spareGroups.size;
+}
 const WORKER_URL='https://mira-product-search.tabithajebarker.workers.dev/';
 async function search(){
  const q=query.value.trim();
@@ -209,6 +266,8 @@ async function search(){
   return tokens.every(t=>searchable.includes(t)||codes.some(code=>code===normalise(t)||code===normalise(t).replace(/^4(?=\d{7}$)/,'')));
  });
  let backendMessage='';
+ let databaseProducts=[];
+ let databaseSpares=[];
  try {
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),8000);
@@ -218,12 +277,20 @@ async function search(){
   if(!response.ok)throw new Error('HTTP '+response.status);
   const data=await response.json();
   if(data.status==='complete' && data.query===q){
-   backendMessage='Cloudflare search service connected (live internet search not enabled yet)';
+   databaseProducts=Array.isArray(data.results)?data.results:[];
+   databaseSpares=Array.isArray(data.spares)?data.spares:[];
+   backendMessage='Cloudflare database connected';
   } else {backendMessage='Search service returned an unexpected response';}
  } catch(e){backendMessage='Search service unavailable; showing local catalogue matches';}
  if(requestId!==activeSearch)return;
  render(matches,q);
- setStatus('complete',`${matches.length} catalogue match${matches.length===1?'':'es'} · ${backendMessage}`);
+ const databaseCount=renderDatabase(databaseProducts,databaseSpares,matches);
+ const total=matches.length+databaseCount;
+ document.getElementById('resultCount').textContent=`${total} matching record${total===1?'':'s'}`;
+ if(total>0){
+  const empty=results.querySelector('.empty');if(empty)empty.remove();
+ }
+ setStatus('complete',`${matches.length} catalogue · ${databaseCount} database match${databaseCount===1?'':'es'} · ${backendMessage}`);
 }
 document.getElementById('searchBtn').addEventListener('click',search);
 query.addEventListener('keydown',e=>{if(e.key==='Enter')search()});
