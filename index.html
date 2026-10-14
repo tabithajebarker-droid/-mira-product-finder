@@ -90,7 +90,8 @@ footer{background:#f8fbfb}
 .search-status.show{display:flex}.search-status .status-icon{font-size:1.4rem}.search-status small{display:block;color:#3e6d60;font-size:.78rem;font-weight:500;margin-top:3px}
 .search-status.searching{background:#eef5ff;border-color:#b9d5f3;color:#225b86}.search-status.searching .status-icon{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.results{grid-template-columns:1fr}
+ .results{grid-template-columns:1fr}
+.doc-section{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.doc-section h4{margin:0 0 8px;color:var(--ink);font-size:1rem}.doc-section p{font-size:.88rem;color:var(--muted);margin:0 0 12px}.doc-link{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:13px 15px;border:1px solid #a8d9cd;border-radius:12px;background:#effaf6;color:#105a51;font-weight:750;text-decoration:none}.doc-link:hover{background:#e1f5ed}.spares-list{margin:8px 0;padding-left:20px;columns:2}.spares-list li{break-inside:avoid;margin-bottom:8px;font-size:.9rem}.spares-list strong{display:block;color:var(--ink)}@media(max-width:560px){.spares-list{columns:1}}
 </style>
 </head>
 <body>
@@ -129,9 +130,9 @@ footer{background:#f8fbfb}
 </main>
 <footer><div class="wrap">Mira Product Finder · Technical identification only</div></footer>
 <script>
-// Starter catalogue: provisional record, not a live product feed.
+// Curated starter catalogue. Verified product identification and direct manufacturer PDF; no live product feed.
 const productRecords = [
- {name:"Mira Platinum Dual Outlet Rear Fed Digital Shower",part:"1.1981.005",models:"Mira Platinum Dual",desc:"Candidate product identification from the supplied product number. Confirm configuration against the manufacturer's documentation before use.",status:"Not yet verified",replacement:"Not yet verified",docs:"Official technical documentation to be confirmed",terms:"platinum dual digital shower rear fed",kind:"Product reference",verified:false}
+ {name:"Mira Platinum Dual Outlet Rear Fed Digital Shower",part:"1.1981.005",models:"Mira Platinum Dual",desc:"Mira Platinum Dual Rear Fed (Low Pressure), pumped digital shower. Confirm the configuration against the linked Mira guide.",status:"Not checked against current manufacturer catalogue",replacement:"Not confirmed",docs:"Official Mira installation and user guide available below",manualUrl:"https://techcomm.kohler.com/techcomm/pdf/1514415-W2-C%20Mira%20Platinum%20Installation%20Guide.pdf",spares:[["1656.131","Wall plate assembly"],["1656.132","Wall arm concealing shroud"],["1688.187","360 rail end"],["1688.190","360 Classic component pack"],["1799.009","Horizontal wall arm"],["1844.022","1.25m smooth shower hose"],["GP1489852W","Platinum UI cable"],["GP1489853W","Platinum UI dual controller"]],terms:"platinum dual digital shower rear fed",kind:"Product reference",verified:true}
 ];
 const results = document.getElementById('results');
 const query = document.getElementById('query');
@@ -165,12 +166,27 @@ function render(items, q){
   const card=document.createElement('article');card.className='result';
   const top=document.createElement('div');top.className='resulttop';
   const heading=document.createElement('div');const h=document.createElement('h3');h.textContent=item.name;const p=document.createElement('p');p.className='muted';p.textContent=item.kind+': '+item.part;heading.append(h,p);
-  const tag=document.createElement('span');tag.className='tag example';tag.textContent='PROVISIONAL MATCH';top.append(heading,tag);card.append(top);
+  const tag=document.createElement('span');tag.className=item.verified?'tag':'tag example';tag.textContent=item.verified?'DOCUMENTED MODEL':'PROVISIONAL MATCH';top.append(heading,tag);card.append(top);
   const desc=document.createElement('p');desc.textContent=item.desc;card.append(desc);
   const details=document.createElement('div');details.className='details';
   [['Product family',item.models],['Current / obsolete status',item.status],['Replacement',item.replacement],['Parts diagrams and manuals',item.docs]].forEach(([label,value])=>{const d=document.createElement('div');d.className='detail';const b=document.createElement('b');b.textContent=label;const span=document.createElement('span');span.textContent=value;d.append(b,span);details.append(d)});
   card.append(details);
-  const links=document.createElement('div');links.className='links';links.append(makeLink('Find official Mira information',`https://www.google.com/search?q=${encodeURIComponent('site:mirashowers.co.uk "'+item.part+'"')}`));links.append(makeLink('Search manuals and diagrams',`https://www.google.com/search?q=${encodeURIComponent('Mira "'+item.part+'" manual parts diagram')}`));card.append(links);results.append(card);
+  if(item.manualUrl){
+   const docs=document.createElement('section');docs.className='doc-section';
+   const dh=document.createElement('h4');dh.textContent='Technical documents';
+   const dp=document.createElement('p');dp.textContent='Official manufacturer PDF covering this model. Opens directly in a new tab.';
+   const link=makeLink('📄 Open Mira installation & user guide (PDF) ↗',item.manualUrl);link.className='doc-link';
+   docs.append(dh,dp,link);card.append(docs);
+  }
+  if(item.spares?.length){
+   const section=document.createElement('section');section.className='doc-section';
+   const sh=document.createElement('h4');sh.textContent='Associated spares (starter list)';
+   const note=document.createElement('p');note.textContent='Part numbers listed by an independent spares specialist. Compatibility has not been independently confirmed by Mira; this is not a complete spares list.';
+   const ul=document.createElement('ul');ul.className='spares-list';
+   item.spares.forEach(([code,name])=>{const li=document.createElement('li');const b=document.createElement('strong');b.textContent=code;li.append(b,document.createTextNode(name));ul.append(li)});
+   section.append(sh,note,ul);card.append(section);
+  }
+  results.append(card);
  });
 }
 function search(){
